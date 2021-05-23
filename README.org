@@ -1,0 +1,9 @@
+#+TITLE: Org Google Tasks
+
+Note: Experimental at this point
+
+This package is for synchronizing org tasks with google tasks using the google tasks API.
+If there are any bugs, please report them in issues.
+
+A google tasklist corresponds to a :PROPERTY: of :GOOGLE_TASKSLIST: (for name) and :GOOGLE_TASKSLIST_ID: (for id, which is generated on first run, after which :GOOGLE_TASKLIST: property does not matter unless you delete the :GOOGLE_TASKLIST_ID: property. Incase they are not present, the buffer name is considered as tasklist name and a new keyword #+GOOGLE_TASKLIST_ID is generated on the first run for the entire file.
+
