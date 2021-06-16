@@ -57,11 +57,14 @@
   (let* ((client_id (gethash "client_id" org-google-tasks-credential))
          (client_secret (gethash "client_secret" org-google-tasks-credential))
          (refresh_token (gethash "refresh_token" org-google-tasks-credential))
-         (authorization_code (gethash "autorization_code" org-google-tasks-credential)))
-    
+         (authorization_code (gethash "authorization_code" org-google-tasks-credential)))
+    (when (or (equal refresh_token "null") (equal refresh_token ':null))
+      (org-google-tasks-get-oauth-code)
+      (setq refresh_token (gethash "refresh_token" org-google-tasks-credential)))
     (if refresh_token
         (request org-google-tasks-auth-token-url
           :type "POST"
+          :sync t
           :parser (lambda() (puthash "access_token" (gethash "access_token" (json-parse-string (buffer-string))) org-google-tasks-credential))
           :data (list 
                  (cons "grant_type"  "refresh_token")
@@ -72,12 +75,14 @@
                  ))
       (request org-google-tasks-auth-token-url
         :type "POST"
-        :parser 'json-parse-buffer
-        :data '(("client_id" . client_id)
-                ("client_secret" . client_secret)
-                ("redirect_uri" . "urn:ietf:wg:oauth:2.0:oob")
-                ("grant_type" . "authorization_code")
-                ("code" . authorization_code)
+        :sync t
+        :parser (lambda() (puthash "access_token" (gethash "access_token" (json-parse-string (buffer-string))) org-google-tasks-credential)(puthash "refresh_token" (gethash "refresh_token" (json-parse-string (buffer-string))) org-google-tasks-credential) (message "%s" (buffer-string)))
+        :data (list
+               (cons "client_id" client_id)
+                (cons "client_secret" client_secret)
+                (cons "redirect_uri" "urn:ietf:wg:oauth:2.0:oob")
+                (cons "grant_type" "authorization_code")
+                (cons "code" authorization_code)
                 ))))
   (puthash "date" (format-time-string "%s" (current-time)) org-google-tasks-credential)
   (org-google-tasks-save-credentials))
@@ -121,17 +126,24 @@
                      (setq org-google-tasks-temp-tasklist data))))))
 
 
-(defun org-google-tasks-insert-remote-task(tasklist name &optional entry due sync)
+(defun org-google-tasks-insert-remote-task(tasklist name &optional entry due sync parent)
   ""
   (interactive "sTitle: ")
   (let ((access_token (gethash "access_token" org-google-tasks-credential)))
     (request (concat org-google-tasks-api-url "/lists/" tasklist "/tasks")
       :type "POST"
       :parser (lambda () (gethash "id" (json-parse-string (buffer-string))))
-      :params (list (cons "access_token" access_token))
+      :params (list (cons "access_token" access_token)
+              (and parent (cons "parent" parent))
+                    )
       :headers '(("Content-Type" . "application/json"))
       :sync sync
-      :data (json-encode (list (cons "title" name) (cons "notes" entry) (cons "due" due)))
+      :data (json-encode
+             (list
+              (cons "title" name)
+              (cons "notes" entry)
+              (cons "due" due)
+              ))
       :complete
       (cl-function (lambda (&key data &allow-other-keys)
                      (setq org-google-tasks-temp-task data))))))
@@ -242,4 +254,11 @@
       nil)
     ))
 
+(defun org-google-tasks-check-date()
+  ""
+  (> (- (string-to-number (format-time-string "%s" (current-time))) (string-to-number (gethash "date" org-google-tasks-credential))) 3600)
+  )
+(defun org-google-tasks-convert-time (time)
+  (format-time-string "%Y-%m-%dT%H:%M:%S.000Z" time))
+  
 (provide 'org-google-tasks)
