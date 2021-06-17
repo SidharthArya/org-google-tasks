@@ -162,7 +162,7 @@
   ""
   (interactive)
   (with-current-buffer (find-file-noselect org-google-tasks-credential-file)
-    (kill-region (point-min) (point-max))
+    (delete-region (point-min) (point-max))
     (insert (json-encode org-google-tasks-credential))
     (save-buffer)))
 (defun org-google-tasks-sync-file(&optional file)
