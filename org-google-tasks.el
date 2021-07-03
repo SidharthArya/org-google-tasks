@@ -4,6 +4,8 @@
 
 ;; Author: Sidharth Arya <sidhartharya10@gmail.com>
 ;; Maintainer: Someone Else <someone@example.com>
+;; Created: 14 Jul 2010
+
 ;; Keywords: languages
 ;; URL: https://example.com/foo
 
@@ -275,4 +277,4 @@
   (format-time-string "%Y-%m-%dT%H:%M:%S.000Z" time))
   
 (provide 'org-google-tasks)
-;; org-google-tasks.el e
+;;; org-google-tasks.el ends here
