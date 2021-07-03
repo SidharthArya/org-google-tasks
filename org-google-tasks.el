@@ -12,7 +12,7 @@
 ;; This file is not part of GNU Emacs.
 
 ;; This file is free software…
-…
+
 ;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
